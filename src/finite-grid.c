@@ -376,10 +376,6 @@ void initFiniteGrid( PomdpSolveParams param )
   fprintf( param->report_file, "    [Creating grid ... "  );
   fflush( param->report_file );
 
-  // PBVI:
-  gFiniteGrid = readBeliefList( "facet-test-00.belief", 0 );
-  goto FG_END;
-
   switch( param->opts->finite_grid_type ) {
     
   case POMDP_SOLVE_OPTS_Fg_Type_initial:
@@ -404,10 +400,6 @@ void initFiniteGrid( PomdpSolveParams param )
     break;
     
   } /* switch param->opts->finite_grid_type */
-
-  // PBVI:
- FG_END:
-
 
   fprintf( param->report_file, "done.]\n"  );
 
