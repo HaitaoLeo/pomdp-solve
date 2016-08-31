@@ -15,8 +15,8 @@
  *  <RCS_KEYWORD>
  *    $RCSfile: alpha.h,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/alpha.h,v $
- *    $Revision: 1.4 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.3 $
+ *    $Date: 2004/04/18 23:54:04 $
  *  </RCS_KEYWORD>
  *
  *  <COPYRIGHT>
@@ -397,9 +397,6 @@ extern int sameAlphaList( AlphaList l1,
 extern int similarAlphaList( AlphaList list1,
                              AlphaList list2,
                              double epsilon );
-
-/* Force roundin tor epsilon precision */
-extern void roundAlphaList( AlphaList list, double precision ); 
  
 /* Printout a textual version of the list.  */
 extern void displayAlphaList( FILE *file, 

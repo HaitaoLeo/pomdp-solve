@@ -62,6 +62,7 @@
 #include "pomdp.h"
 #include "alpha.h"
 #include "params.h"
+#include "region.h"
 #include "projection.h"
 #include "enumeration.h"
 #include "linear-support.h"
@@ -364,6 +365,17 @@ setBestAlphasForBeliefV( double *b, AlphaList **projection, double epsilon )
       && bestAlphaForBeliefQ( gCurAlphaVector[a], b, 
                               projection[a], epsilon );
    
+  // PBVI:
+  printf( "Belief: " );
+  showAlpha( b );
+
+  printf( "Alphas:\n" );
+  for( a = 0; a < gNumActions; a++ )
+    {
+	 printf( "a=%d : ", a );
+	 showAlpha( gCurAlphaVector[a]->alpha );
+    }
+
   return ( result );
 }  /* setBestAlphasForBeliefV */
 /**********************************************************************/

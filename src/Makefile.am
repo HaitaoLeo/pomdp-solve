@@ -5,9 +5,6 @@ INCLUDES = -I$(top_srcdir)/src/mdp -I$(top_srcdir)/src/lp-solve  -I$(top_srcdir)
 #
 CFLAGS =
 
-# Make sure to generate the header file, since the scanner will need it.
-YFLAGS = -d
-
 # Assumed location of dmalloc.h
 #
 DMALLOC_BASE = /usr/local

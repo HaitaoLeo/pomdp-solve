@@ -9,14 +9,14 @@
  *    Anthony R. Cassandra
  *  </AUTHOR>
  *  <CREATE_DATE>
- *    February 2005
+ *    June 2004
  *  </CREATE_DATE>
  *
  *  <RCS_KEYWORD>
  *    $RCSfile: pomdp-tools-options.h,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/pomdp-tools-options.h,v $
- *    $Revision: 1.9 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.8 $
+ *    $Date: 2005/01/25 21:20:46 $
  *    $Author: arc $
 
 *  </RCS_KEYWORD>
@@ -24,7 +24,7 @@
  *  <COPYRIGHT>
  *
 
- *    2005, Anthony R. Cassandra
+ *    2004, Anthony R. Cassandra
  *
  *    All Rights Reserved
  *                          
@@ -50,7 +50,7 @@
  */
 
 /*
- * This code was automatically generated on February 2005 by the program:
+ * This code was automatically generated on June 2004 by the program:
  *
  *     gen-program-opts.py
  */

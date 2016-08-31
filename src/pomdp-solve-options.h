@@ -14,9 +14,9 @@
  *
  *  <RCS_KEYWORD>
  *    $RCSfile: pomdp-solve-options.h,v $
- *    $Source: pomdp-solve-options.h,v $
- *    $Revision: 1.6 $
- *    $Date: February 2005 $
+ *    $Source: /u/cvs/proj/pomdp-solve/src/pomdp-solve-options.h,v $
+ *    $Revision: 1.8 $
+ *    $Date: 2005/02/20 22:47:20 $
  *    $Author: arc $
 
 *  </RCS_KEYWORD>
@@ -117,7 +117,6 @@ typedef enum {
   POMDP_SOLVE_OPTS_Fg_Type_pairwise,
   POMDP_SOLVE_OPTS_Fg_Type_search,
   POMDP_SOLVE_OPTS_Fg_Type_initial,
-  POMDP_SOLVE_OPTS_Fg_Type_file,
   POMDP_SOLVE_OPTS_Fg_Type__END__
 } POMDP_SOLVE_OPTS_Fg_Type_Type;
 
@@ -226,7 +225,6 @@ typedef enum {
     "pairwise", \
     "search", \
     "initial", \
-    "file", \
     "" \
   }
 
@@ -303,20 +301,6 @@ struct PomdpSolveProgOptionsStruct {
    * bound imposed by the pomdp-solve program.
    */
   int max_secs;
-
-  /*
-   *  Although the 'epsilon' precision value is used to determine
-   * equality in an approximate manner, the solutions that are
-   * saved and/or fed into the next value iteration epoch retain
-   * their computed values. Thus, two value that are considered
-   * the same from an epilon-approximate viewpoint might actually
-   * have different values from a machine-precision viewpoint,
-   * and thus wehn used to seed the next iteration may not lead
-   * to the same values. This flag will force the alpha vector
-   * coef values to be rounded in accordance with the 'epilson'
-   * value after each iteration.
-   */
-  Boolean_Type force_rounding;
 
   /*
    *  The Monte-Carlo, Gauss-Seidel method using trajectories
@@ -599,13 +583,6 @@ struct PomdpSolveProgOptionsStruct {
   POMDP_SOLVE_OPTS_Fg_Purge_Type fg_purge_option;
 
   /*
-   *  Setting this flag will force the addition of an offset to
-   * all immediate rewards to ensure that none of them are
-   * negative.
-   */
-  Boolean_Type fg_nonneg_rewards;
-
-  /*
    *  The first step for most algorithms is to compute the
    * forward projection of the previous iteration solution
    * components. Combinations of these will comprise the current
@@ -651,13 +628,6 @@ struct PomdpSolveProgOptionsStruct {
    * the precision increment.
    */
   double epsilon_adjust_factor;
-
-  /*
-   *  If the 'fg_type' option is set to 'file', then this option
-   * will define the filename of the file to read the grid from.
-   * The grid is just a list of belief states.
-   */
-  char grid_filename[MAX_OPT_STRING_LEN];
 
   /*
    *  When pruning sets of value function components, we can use
@@ -714,7 +684,6 @@ struct PomdpSolveProgOptionsStruct {
 /*
  * Default values for parameters.
  */
-#define POMDP_SOLVE_OPTS_OPT_FORCE_ROUNDING_DEFAULT Boolean_false
 #define POMDP_SOLVE_OPTS_OPT_MCGS_PRUNE_FREQ_DEFAULT 100
 #define POMDP_SOLVE_OPTS_OPT_INC_PRUNE_DEFAULT POMDP_SOLVE_OPTS_Inc_Prune_normal
 #define POMDP_SOLVE_OPTS_OPT_PRUNE_EPSILON_DEFAULT 1e-9
@@ -737,7 +706,6 @@ struct PomdpSolveProgOptionsStruct {
 #define POMDP_SOLVE_OPTS_OPT_DISCOUNT_DEFAULT -1
 #define POMDP_SOLVE_OPTS_OPT_FG_POINTS_DEFAULT 10000
 #define POMDP_SOLVE_OPTS_OPT_FG_PURGE_DEFAULT POMDP_SOLVE_OPTS_Fg_Purge_normal_prune
-#define POMDP_SOLVE_OPTS_OPT_FG_NONNEG_REWARDS_DEFAULT Boolean_false
 #define POMDP_SOLVE_OPTS_OPT_PROJ_PURGE_DEFAULT POMDP_SOLVE_OPTS_Proj_Purge_normal_prune
 #define POMDP_SOLVE_OPTS_OPT_MCGS_TRAJ_LENGTH_DEFAULT 100
 #define POMDP_SOLVE_OPTS_OPT_VI_VARIATION_DEFAULT POMDP_SOLVE_OPTS_Vi_Variation_normal
@@ -748,7 +716,6 @@ struct PomdpSolveProgOptionsStruct {
  * Strings for config file parameters.
  */
 #define POMDP_SOLVE_OPTS_CFG_TIME_LIMIT_STR "time_limit"
-#define POMDP_SOLVE_OPTS_CFG_FORCE_ROUNDING_STR "force_rounding"
 #define POMDP_SOLVE_OPTS_CFG_MCGS_PRUNE_FREQ_STR "mcgs_prune_freq"
 #define POMDP_SOLVE_OPTS_CFG_VERBOSE_STR "verbose"
 #define POMDP_SOLVE_OPTS_CFG_STDOUT_STR "stdout"
@@ -781,13 +748,11 @@ struct PomdpSolveProgOptionsStruct {
 #define POMDP_SOLVE_OPTS_CFG_DISCOUNT_STR "discount"
 #define POMDP_SOLVE_OPTS_CFG_FG_POINTS_STR "fg_points"
 #define POMDP_SOLVE_OPTS_CFG_FG_PURGE_STR "fg_purge"
-#define POMDP_SOLVE_OPTS_CFG_FG_NONNEG_REWARDS_STR "fg_nonneg_rewards"
 #define POMDP_SOLVE_OPTS_CFG_PROJ_PURGE_STR "proj_purge"
 #define POMDP_SOLVE_OPTS_CFG_MCGS_TRAJ_LENGTH_STR "mcgs_traj_length"
 #define POMDP_SOLVE_OPTS_CFG_HISTORY_DELTA_STR "history_delta"
 #define POMDP_SOLVE_OPTS_CFG_F_STR "f"
 #define POMDP_SOLVE_OPTS_CFG_EPSILON_ADJUST_STR "epsilon_adjust"
-#define POMDP_SOLVE_OPTS_CFG_GRID_FILENAME_STR "grid_filename"
 #define POMDP_SOLVE_OPTS_CFG_PRUNE_RAND_STR "prune_rand"
 #define POMDP_SOLVE_OPTS_CFG_VI_VARIATION_STR "vi_variation"
 #define POMDP_SOLVE_OPTS_CFG_HORIZON_STR "horizon"
@@ -799,7 +764,6 @@ struct PomdpSolveProgOptionsStruct {
  * Strings for cmd line parameters.
  */
 #define POMDP_SOLVE_OPTS_ARG_TIME_LIMIT_STR "-time_limit"
-#define POMDP_SOLVE_OPTS_ARG_FORCE_ROUNDING_STR "-force_rounding"
 #define POMDP_SOLVE_OPTS_ARG_MCGS_PRUNE_FREQ_STR "-mcgs_prune_freq"
 #define POMDP_SOLVE_OPTS_ARG_VERBOSE_STR "-verbose"
 #define POMDP_SOLVE_OPTS_ARG_STDOUT_STR "-stdout"
@@ -832,13 +796,11 @@ struct PomdpSolveProgOptionsStruct {
 #define POMDP_SOLVE_OPTS_ARG_DISCOUNT_STR "-discount"
 #define POMDP_SOLVE_OPTS_ARG_FG_POINTS_STR "-fg_points"
 #define POMDP_SOLVE_OPTS_ARG_FG_PURGE_STR "-fg_purge"
-#define POMDP_SOLVE_OPTS_ARG_FG_NONNEG_REWARDS_STR "-fg_nonneg_rewards"
 #define POMDP_SOLVE_OPTS_ARG_PROJ_PURGE_STR "-proj_purge"
 #define POMDP_SOLVE_OPTS_ARG_MCGS_TRAJ_LENGTH_STR "-mcgs_traj_length"
 #define POMDP_SOLVE_OPTS_ARG_HISTORY_DELTA_STR "-history_delta"
 #define POMDP_SOLVE_OPTS_ARG_F_STR "-f"
 #define POMDP_SOLVE_OPTS_ARG_EPSILON_ADJUST_STR "-epsilon_adjust"
-#define POMDP_SOLVE_OPTS_ARG_GRID_FILENAME_STR "-grid_filename"
 #define POMDP_SOLVE_OPTS_ARG_PRUNE_RAND_STR "-prune_rand"
 #define POMDP_SOLVE_OPTS_ARG_VI_VARIATION_STR "-vi_variation"
 #define POMDP_SOLVE_OPTS_ARG_HORIZON_STR "-horizon"

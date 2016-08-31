@@ -14,8 +14,8 @@
  *  <RCS_KEYWORD>
  *    $RCSfile: finite-grid.c,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/finite-grid.c,v $
- *    $Revision: 1.13 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.12 $
+ *    $Date: 2005/02/22 18:49:57 $
  *  </RCS_KEYWORD>
  *
  *  <COPYRIGHT>
@@ -57,6 +57,7 @@
 #include "global.h"
 #include "pomdp.h"
 #include "alpha.h"
+#include "parsimonious.h"
 #include "belief.h"
 #include "params.h"
 #include "projection.h"
@@ -360,68 +361,13 @@ void FG_addPairwise( )
   } /* for i */
 
 } /* FG_addPairwise */
-
 /**********************************************************************/
-AlphaList
-FG_getInitialvalueFunction( PomdpSolveParams param ) 
-{
-  /*
-    To guarantee convergence in point-based (finite grid) value
-    iteration, one must ensure the initial value function is a lower
-    bound on the optimal value function.  In the 'discount < 1' case,
-    this lower bound can be guaranteed by setting a single vector with
-    the values:
-
-       M / ( 1 - discount)
-
-    where M is the minimum possible reward over all rewards.	  
-   */
-  AlphaList alpha_list;
-  double *alpha;
-  double value = 0.0;
-  int i;
-
-  /* Make sure to handle case where discount is 1.0, since here we
-	will just use the all zero vector.
-  */
-  if ( param->opts->fg_nonneg_rewards )
-    {
-	 value = -1.0;
-    }
-  else if ( gDiscount < 1.0 ) 
-    {
-	 value = gMinimumImmediateReward / ( 1.0 - gDiscount );
-    } /* if discounted problem */
-
-  alpha_list = newAlphaList();
-  alpha = newAlpha();
-
-  for ( i = 0; i < gNumStates; i++ )
-    alpha[i] = value;
-
-  appendAlphaList( alpha_list, alpha, 0 );
-    
-  return alpha_list;
-
-} /* FG_getInitialvalueFunction */
-
-/**********************************************************************/
-void 
-initFiniteGrid( PomdpSolveParams param )
+void initFiniteGrid( PomdpSolveParams param )
 {
   int i;
   char belief_filename[MAX_MSG_LENGTH];
 
   Assert( param != NULL, "Param object is NULL." );
-
-  /* There is the option of forcing all rewards of the problem to be
-	non-negative.  This allows an all zero initial value function
-	(initial values must lower bound all value functions).
-  */
-  if ( param->opts->fg_nonneg_rewards )
-    {
-	 gRequireNonNegativeRewards = TRUE;
-    }
 
   gFGTempBelief = (double *) XCALLOC( gNumStates,
 							  sizeof(double));
@@ -430,15 +376,12 @@ initFiniteGrid( PomdpSolveParams param )
   fprintf( param->report_file, "    [Creating grid ... "  );
   fflush( param->report_file );
 
+  // PBVI:
+  gFiniteGrid = readBeliefList( "facet-test-00.belief", 0 );
+  goto FG_END;
+
   switch( param->opts->finite_grid_type ) {
     
-  case POMDP_SOLVE_OPTS_Fg_Type_file:
-    fprintf( param->report_file, "\n    [Reading grid from %s... ",
-		   param->opts->grid_filename );
-    fflush( param->report_file );
-    gFiniteGrid = readBeliefList( param->opts->grid_filename, 0 );
-    break;
-
   case POMDP_SOLVE_OPTS_Fg_Type_initial:
     gFiniteGrid = genInitialDerivedBeliefStates( param );
 
@@ -452,14 +395,19 @@ initFiniteGrid( PomdpSolveParams param )
   case POMDP_SOLVE_OPTS_Fg_Type_pairwise:
     FG_addSimplexCorners();
     FG_addPairwise();
+
     break;
-   
+    
   case POMDP_SOLVE_OPTS_Fg_Type_simplex:
   default:
     FG_addSimplexCorners();
     break;
     
   } /* switch param->opts->finite_grid_type */
+
+  // PBVI:
+ FG_END:
+
 
   fprintf( param->report_file, "done.]\n"  );
 
@@ -490,13 +438,10 @@ cleanUpFiniteGrid( )
 } /* cleanUpFiniteGrid */
 /**********************************************************************/
 AlphaList 
-improveFiniteGrid( AlphaList prev_alpha_list,
-			    AlphaList **projection, 
-			    PomdpSolveParams param )
+improveFiniteGrid( AlphaList **projection, PomdpSolveParams param )
 {
   AlphaList new_alpha_list;
-  AlphaList new_best_alpha, old_best_alpha, existing_alpha;
-  double old_value, new_value;
+  AlphaList alpha_node = NULL;
   BeliefList belief_list;
 
   Assert ( projection != NULL, "Projection sets are NULL." );
@@ -506,55 +451,18 @@ improveFiniteGrid( AlphaList prev_alpha_list,
   belief_list = gFiniteGrid;
   while( belief_list != NULL ) {
 
-    /* Constructs new vector in global structure gCurAlphaHeader,
-	  and determined which is the best and what that best value is.
-    */
-    new_value = oneStepValue( belief_list->b,
-						projection,
-						&new_best_alpha,
-						param->alpha_epsilon );
+    /* Find the best vector at this point and add it to the list.
+	  Note that this will check to make sure the vector is not
+	  already in the list and return NULL if it is. */
+    alpha_node = makeAlphaVector( new_alpha_list,
+						    projection,
+						    belief_list->b,
+						    param->alpha_epsilon );
 
-    /* Doing this point-based (finite grid) value iteration with the
-	  normal POMDP value update is not guaranteed to converge.  To get
-	  convergence, one needs to ensure that the value at any point in
-	  the grid never gets any worse than the previous value
-	  function.  To enforce this, for each point, we always compare
-	  the old and the new value and retain the vector for the old
-	  value in the case that the new value is worse.
-    */
-    old_best_alpha = bestVector( prev_alpha_list,
-						   belief_list->b,
-						   &old_value,
-						   param->alpha_epsilon );
-
-    /* printf( "OLD: %.6f, NEW: %.6f\n", old_value, new_value ); */
-
-    if ( ! GreaterThan( new_value, old_value, param->epsilon ) ) {
-	 copyAlpha( new_best_alpha->alpha, old_best_alpha->alpha );
-    } /* if new value it not better than old value */
-
-    /* See if this vector is already in the list or not. */
-    existing_alpha = findAlphaVector( new_alpha_list,
-							   new_best_alpha->alpha,
-							   param->alpha_epsilon );
-
-    /* Always want to make sure we do not add the same vector twice
-	  (this vector might also be the best vector for another point in
-	  the grid.) 
-    */
-    if ( existing_alpha == NULL ) {
-	 
-	 /* Note that regardles of whether we are using a new or the old
-	    vector, the new_best_alpha points to memory that is either part
-	    of the global gCurAlphaHeader or the previous alpha list.  So
-	    to add it to the new list requires allocating memory for a copy
-	    of it. 
-	 */
-	 appendDuplicateNodeToAlphaList( new_alpha_list, new_best_alpha );
-
-    } /* if new node not already in list */
+   /* We may find that this vector is already in the list. */
 
     belief_list = belief_list->next;
+    
 
   } /* while belief_list */
 

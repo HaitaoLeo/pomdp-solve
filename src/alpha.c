@@ -15,8 +15,8 @@
  *  <RCS_KEYWORD>
  *    $RCSfile: alpha.c,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/alpha.c,v $
- *    $Revision: 1.6 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.5 $
+ *    $Date: 2004/10/10 03:44:53 $
  *  </RCS_KEYWORD>
  *
  *  <COPYRIGHT>
@@ -1063,25 +1063,6 @@ similarAlphaList( AlphaList list1,
   
   return ( TRUE );
 }  /* similarAlphaList */
-/**********************************************************************/
-void 
-roundAlphaList( AlphaList list, double precision ) 
-{
-  int i;
-
-  Assert( list != NULL, "Alpha list is NULL." );
-  Assert( precision != 0.0, "Precision is zero." );
-  
-  list = list->head;
-  while( list != NULL ) {
-    
-    for ( i = 0; i < gNumStates; i++ )
-	 list->alpha[i] = round( list->alpha[i] / precision ) * precision;
-    
-    list = list->next;
-  }  /* while */
-
-} /* writeAlphaList */
 /**********************************************************************/
 void 
 displayAlphaList( FILE *file, AlphaList list ) 
