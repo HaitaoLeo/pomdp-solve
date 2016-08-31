@@ -14,9 +14,9 @@
  *
  *  <RCS_KEYWORD>
  *    $RCSfile: pomdp-solve-options.c,v $
- *    $Source: pomdp-solve-options.c,v $
- *    $Revision: 1.6 $
- *    $Date: February 2005 $
+ *    $Source: /u/cvs/proj/pomdp-solve/src/pomdp-solve-options.c,v $
+ *    $Revision: 1.8 $
+ *    $Date: 2005/02/20 22:47:20 $
  *    $Author: arc $
 
 *  </RCS_KEYWORD>
@@ -98,12 +98,11 @@ POMDP_SOLVE_OPTS_new( )
 
   strcpy( options->__exec_name__, "pomdp-solve" );
 
-  strcpy( options->__version__, "5.3" );
+  strcpy( options->__version__, "5.4" );
 
   options->__error__ = 0;
 
   options->max_secs = 0;
-  options->force_rounding = POMDP_SOLVE_OPTS_OPT_FORCE_ROUNDING_DEFAULT;
   options->mcgs_prune_freq = POMDP_SOLVE_OPTS_OPT_MCGS_PRUNE_FREQ_DEFAULT;
   options->verbose = 0;
   options->report_filename[0] = '\0';
@@ -136,13 +135,11 @@ POMDP_SOLVE_OPTS_new( )
   options->override_discount = POMDP_SOLVE_OPTS_OPT_DISCOUNT_DEFAULT;
   options->finite_grid_points = POMDP_SOLVE_OPTS_OPT_FG_POINTS_DEFAULT;
   options->fg_purge_option = POMDP_SOLVE_OPTS_OPT_FG_PURGE_DEFAULT;
-  options->fg_nonneg_rewards = POMDP_SOLVE_OPTS_OPT_FG_NONNEG_REWARDS_DEFAULT;
   options->proj_purge = POMDP_SOLVE_OPTS_OPT_PROJ_PURGE_DEFAULT;
   options->mcgs_traj_length = POMDP_SOLVE_OPTS_OPT_MCGS_TRAJ_LENGTH_DEFAULT;
   options->epoch_history_window_delta = 0;
   options->true[0] = '\0';
   options->epsilon_adjust_factor = 0.0;
-  options->grid_filename[0] = '\0';
   options->prune_init_rand_points = 0;
   options->vi_variation = POMDP_SOLVE_OPTS_OPT_VI_VARIATION_DEFAULT;
   options->horizon = 0;
@@ -174,9 +171,6 @@ POMDP_SOLVE_OPTS_toConfigFile( PomdpSolveProgOptions options )
 
   sprintf( str, "%d", options->max_secs );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_TIME_LIMIT_STR, str );
-
-  sprintf( str, "%s", Boolean_Str[options->force_rounding] );
-  CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_FORCE_ROUNDING_STR, str );
 
   sprintf( str, "%d", options->mcgs_prune_freq );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_MCGS_PRUNE_FREQ_STR, str );
@@ -274,9 +268,6 @@ POMDP_SOLVE_OPTS_toConfigFile( PomdpSolveProgOptions options )
   sprintf( str, "%s", POMDP_SOLVE_OPTS_Fg_Purge_Str[options->fg_purge_option] );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_FG_PURGE_STR, str );
 
-  sprintf( str, "%s", Boolean_Str[options->fg_nonneg_rewards] );
-  CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_FG_NONNEG_REWARDS_STR, str );
-
   sprintf( str, "%s", POMDP_SOLVE_OPTS_Proj_Purge_Str[options->proj_purge] );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_PROJ_PURGE_STR, str );
 
@@ -291,9 +282,6 @@ POMDP_SOLVE_OPTS_toConfigFile( PomdpSolveProgOptions options )
 
   sprintf( str, "%.6f", options->epsilon_adjust_factor );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_EPSILON_ADJUST_STR, str );
-
-  sprintf( str, "%s", options->grid_filename );
-  CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_GRID_FILENAME_STR, str );
 
   sprintf( str, "%d", options->prune_init_rand_points );
   CF_addParam( cfg, POMDP_SOLVE_OPTS_CFG_PRUNE_RAND_STR, str );
@@ -337,9 +325,6 @@ POMDP_SOLVE_OPTS_showUsage( FILE* file, char* exec_name )
   /*******************************/
   fprintf( file, "General options:\n" );
 
-  PO_showUsageEnumType( file,
-                     POMDP_SOLVE_OPTS_ARG_FORCE_ROUNDING_STR,
-                     Boolean_Str );
   fprintf( file, "\t%s <string>\n", POMDP_SOLVE_OPTS_ARG_STDOUT_STR );
   PO_showUsageEnumType( file,
                      POMDP_SOLVE_OPTS_ARG_SAVE_PENULTIMATE_STR,
@@ -385,11 +370,7 @@ POMDP_SOLVE_OPTS_showUsage( FILE* file, char* exec_name )
   PO_showUsageEnumType( file,
                      POMDP_SOLVE_OPTS_ARG_FG_PURGE_STR,
                      POMDP_SOLVE_OPTS_Fg_Purge_Str );
-  PO_showUsageEnumType( file,
-                     POMDP_SOLVE_OPTS_ARG_FG_NONNEG_REWARDS_STR,
-                     Boolean_Str );
   fprintf( file, "\t%s <int>\n", POMDP_SOLVE_OPTS_ARG_MCGS_TRAJ_LENGTH_STR );
-  fprintf( file, "\t%s <string>\n", POMDP_SOLVE_OPTS_ARG_GRID_FILENAME_STR );
 
   /*******************************/
   /* Optimization parameters  */
@@ -472,14 +453,6 @@ POMDP_SOLVE_OPTS_parse( ProgramOptions opts )
                            INT_MAX );
   if ( ret_value == PO_OPT_PRESENT_ERROR )
     PO_handleError( opts, "Option 'max_secs' has invalid value." );
-
-  ret_value = PO_getEnumOption( opts,
-                         POMDP_SOLVE_OPTS_ARG_FORCE_ROUNDING_STR,
-                         &(enum_idx),
-                         Boolean_Str );
-  options->force_rounding = enum_idx;
-  if ( ret_value == PO_OPT_PRESENT_ERROR )
-    PO_handleError( opts, "Option 'force_rounding' has invalid value." );
 
   ret_value = PO_getIntegerOption( opts,
                            POMDP_SOLVE_OPTS_ARG_MCGS_PRUNE_FREQ_STR,
@@ -746,14 +719,6 @@ POMDP_SOLVE_OPTS_parse( ProgramOptions opts )
     PO_handleError( opts, "Option 'fg_purge_option' has invalid value." );
 
   ret_value = PO_getEnumOption( opts,
-                         POMDP_SOLVE_OPTS_ARG_FG_NONNEG_REWARDS_STR,
-                         &(enum_idx),
-                         Boolean_Str );
-  options->fg_nonneg_rewards = enum_idx;
-  if ( ret_value == PO_OPT_PRESENT_ERROR )
-    PO_handleError( opts, "Option 'fg_nonneg_rewards' has invalid value." );
-
-  ret_value = PO_getEnumOption( opts,
                          POMDP_SOLVE_OPTS_ARG_PROJ_PURGE_STR,
                          &(enum_idx),
                          POMDP_SOLVE_OPTS_Proj_Purge_Str );
@@ -793,14 +758,6 @@ POMDP_SOLVE_OPTS_parse( ProgramOptions opts )
                            HUGE_VAL );
   if ( ret_value == PO_OPT_PRESENT_ERROR )
     PO_handleError( opts, "Option 'epsilon_adjust_factor' has invalid value." );
-
-  ret_value = PO_getStringOption( opts,
-                         POMDP_SOLVE_OPTS_ARG_GRID_FILENAME_STR,
-                         options->grid_filename,
-                         NULL,
-                         NULL );
-  if ( ret_value == PO_OPT_PRESENT_ERROR )
-    PO_handleError( opts, "Option 'grid_filename' has invalid value." );
 
   ret_value = PO_getIntegerOption( opts,
                            POMDP_SOLVE_OPTS_ARG_PRUNE_RAND_STR,

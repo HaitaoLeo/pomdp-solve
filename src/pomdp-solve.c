@@ -15,8 +15,8 @@
  *  <RCS_KEYWORD>
  *    $RCSfile: pomdp-solve.c,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/pomdp-solve.c,v $
- *    $Revision: 1.14 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.13 $
+ *    $Date: 2005/01/25 21:20:46 $
  *  </RCS_KEYWORD>
  *
  *  <COPYRIGHT>
@@ -72,6 +72,7 @@
 #include "cmd-line.h"
 #include "pomdp.h"
 #include "alpha.h"
+#include "parsimonious.h"
 #include "stats.h"
 #include "lp-interface.h"
 #include "common.h"
@@ -324,36 +325,24 @@ endPomdpSolve( PomdpSolveParams param,
 }  /* endPomdpSolve */
 /**********************************************************************/
 AlphaList 
-getDefaultInitialPolicy( PomdpSolveParams param ) 
+getDefaultInitialPolicy( ) 
 {
   /*
-    For now our default policy is just all zeroes for exact solving,
-    and for finite grid it is gotten from that module since it needs
-    to ensure the starting values are a lower bound on the solution.
+    For now our default policy is just all zeroes.
   */
   AlphaList alpha_list;
   double *alpha;
   int i;
+  
+  alpha_list = newAlphaList();
+  
+  alpha = newAlpha();
+  for ( i = 0; i < gNumStates; i++ )
+    alpha[i] = 0.0;
 
-  switch( param->opts->method ) {
-    
-  case POMDP_SOLVE_OPTS_Method_grid:
-    return FG_getInitialvalueFunction( param );
-    
-    /* All other algorithms default to all zeroes */
-  default:
+  appendAlphaList( alpha_list, alpha, 0 );
 
-    alpha_list = newAlphaList();
-    
-    alpha = newAlpha();
-    for ( i = 0; i < gNumStates; i++ )
-	 alpha[i] = 0.0;
-    
-    appendAlphaList( alpha_list, alpha, 0 );
-    
-    return ( alpha_list );
-    
-  } /* switch gMethod */
+  return ( alpha_list );
 }  /* getInitialSolution */
 /**********************************************************************/
 void 
@@ -824,7 +813,7 @@ endViEpoch( PomdpSolveParams param )
   } /* switch */
   
 }  /* endViEpoch */
-/**********************************************************************
+/**********************************************************************/
 
 /**********************************************************************/
 /**************     High Level Solution Routines      *****************/
@@ -970,7 +959,7 @@ improveV( AlphaList prev_alpha_list,
     break;
 
   case POMDP_SOLVE_OPTS_Method_grid:
-    next_alpha_list = improveFiniteGrid( prev_alpha_list, projection, param );
+    next_alpha_list = improveFiniteGrid( projection, param );
     break;
 
   case POMDP_SOLVE_OPTS_Method_mcgs:
@@ -1024,7 +1013,7 @@ solvePomdp( PomdpSolveParams param )
      these to next_alpha_list because the first thing the loop does
      is to swap in the next_alpha_list for the current_alpha_list. */
   if ( param->initial_policy == NULL )
-    next_alpha_list = getDefaultInitialPolicy( param );
+    next_alpha_list = getDefaultInitialPolicy( );
   else
     next_alpha_list = duplicateAlphaList( param->initial_policy );
   
@@ -1100,21 +1089,6 @@ solvePomdp( PomdpSolveParams param )
     /* This is the heart of solution process: computing one value
        function from the other. */
     next_alpha_list = improveV( prev_alpha_list, param );
-
-    /* Although the 'epsilon' precision value is used to determine
-	  equality in an approximate manner, the solutions that are saved
-	  and/or fed into the next value iteration epoch retain their
-	  computed values.  Thus, two value that are considered the same
-	  from an epilon-approximate viewpoint might actually have
-	  different values from a machine-precision viewpoint, and thus
-	  wehn used to seed the next iteration may not lead to the same
-	  values.  This flag will force the alpha vector coef values to
-	  be rounded in accordance with the 'epilson' value after each
-	  iteration.
-    */
-    if ( param->opts->force_rounding == TRUE ) {
-	 roundAlphaList( next_alpha_list, param->epsilon );
-    }
 
     /* In case the -save_all option was selected, save the files. We
        need to do this *before* we do the ZLZ update, otherwise the

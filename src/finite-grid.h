@@ -14,8 +14,8 @@
  *  <RCS_KEYWORD>
  *    $RCSfile: finite-grid.h,v $
  *    $Source: /u/cvs/proj/pomdp-solve/src/finite-grid.h,v $
- *    $Revision: 1.7 $
- *    $Date: 2005/10/30 23:21:17 $
+ *    $Revision: 1.6 $
+ *    $Date: 2005/02/20 22:47:20 $
  *  </RCS_KEYWORD>
  *
  *  <COPYRIGHT>
@@ -69,13 +69,16 @@ extern double FG_computeError( AlphaList prev_list,
 						 AlphaList cur_list,
 						 PomdpSolveParams param );
 
-extern AlphaList FG_getInitialvalueFunction( PomdpSolveParams param );
-
 extern void initFiniteGrid( PomdpSolveParams param );
 extern void cleanUpFiniteGrid( );
 
-extern AlphaList improveFiniteGrid( AlphaList prev_alpha_list,
-							 AlphaList **projection, 
+#ifdef ORIGINAL_FINITE_GRID
+extern AlphaList improveFiniteGrid( AlphaList *projection, 
+					    PomdpSolveParams param );
+#else
+extern AlphaList improveFiniteGrid( AlphaList **projection, 
 							 PomdpSolveParams param );
+#endif
+
 
 #endif
