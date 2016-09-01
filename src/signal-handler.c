@@ -74,14 +74,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-Can remove these???? 
-
-#include <sys/types.h>
-#include <unistd.h>
-#include <limits.h>
-*/
-
 /* This has : signal() */
 #include <signal.h>
 
@@ -211,6 +203,9 @@ signalHandlerSIGVTALRM( int sig )
 
   reportSIGVTALRM( gInterruptParamContext );
    
+  /* Set the flag so we terminate after current iteration */
+  gInterrupt = TRUE;
+
 }  /* signalHandlerSIGVTALRM */
 /**********************************************************************/
 static void 
