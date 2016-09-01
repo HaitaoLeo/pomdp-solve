@@ -24,14 +24,14 @@
  *    2004, Anthony R. Cassandra
  *
  *    All Rights Reserved
- *                          
+ *
  *    Permission to use, copy, modify, and distribute this software and its
  *    documentation for any purpose other than its incorporation into a
  *    commercial product is hereby granted without fee, provided that the
  *    above copyright notice appear in all copies and that both that
  *    copyright notice and this permission notice appear in supporting
  *    documentation.
- * 
+ *
  *    ANTHONY CASSANDRA DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  *    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR ANY
  *    PARTICULAR PURPOSE.  IN NO EVENT SHALL ANTHONY CASSANDRA BE LIABLE FOR
@@ -67,7 +67,7 @@
  */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_newNode( int id, int action, int *neighbor ) {
   LinkedPG pg;
   int z;
@@ -87,7 +87,7 @@ LPG_newNode( int id, int action, int *neighbor ) {
 }  /* LPG_newPolicyGraphNode */
 
 /**********************************************************************/
-void 
+void
 LPG_destroyNode( LinkedPG pg ) {
 
   if( pg == NULL )
@@ -99,7 +99,7 @@ LPG_destroyNode( LinkedPG pg ) {
 }  /* LPG_destroyNode */
 
 /**********************************************************************/
-void 
+void
 LPG_destroy( LinkedPG pg ) {
   LinkedPG temp;
 
@@ -114,14 +114,14 @@ LPG_destroy( LinkedPG pg ) {
 }  /* LPG_destroy */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_append( LinkedPG pg, LinkedPG node ) {
   LinkedPG temp = pg;
 
   if( pg == NULL )
     return( node );
 
-  while( temp->next != NULL ) 
+  while( temp->next != NULL )
     temp = temp->next;
 
   temp->next = node;
@@ -130,10 +130,10 @@ LPG_append( LinkedPG pg, LinkedPG node ) {
 }  /* LPG_append */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_addNode( LinkedPG pg, int id, int action, int *neighbor ) {
   LinkedPG node;
-  
+
   node = LPG_newNode( id, action, neighbor );
 
   pg = LPG_append( pg, node );
@@ -142,7 +142,7 @@ LPG_addNode( LinkedPG pg, int id, int action, int *neighbor ) {
 }  /* LPG_addNode */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_findNode( LinkedPG pg, int id ) {
 /*
    Returns '1' if there is a node in the graph with 'id'.
@@ -158,7 +158,7 @@ LPG_findNode( LinkedPG pg, int id ) {
 }  /* LPG_findNode */
 
 /**********************************************************************/
-int 
+int
 LPG_verify( LinkedPG orig_pg ) {
 /*
    Make sure the policy graph is valid.  Need valid actions and
@@ -173,12 +173,12 @@ LPG_verify( LinkedPG orig_pg ) {
       return( 0 );
 
     for( z = 0; z < gNumObservations; z++ )
-	 {
+   {
 
-	   if( LPG_findNode( orig_pg, pg->neighbor[z] ) == NULL )
-		return( 0 );
+     if( LPG_findNode( orig_pg, pg->neighbor[z] ) == NULL )
+    return( 0 );
 
-	 } /* for z */
+   } /* for z */
 
     pg = pg->next;
   }  /* while */
@@ -187,7 +187,7 @@ LPG_verify( LinkedPG orig_pg ) {
 }  /* LPG_verify */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_scanf( FILE *file, int verify ) {
 
   /*
@@ -204,53 +204,52 @@ LPG_scanf( FILE *file, int verify ) {
 
   neighbor = (int *) XMALLOC( gNumObservations * sizeof( int ));
 
-   while( 1 ) {
+  while( 1 ) {
 
-     if( fscanf( file, "%d", &id ) == EOF )
-       break;
+    if( fscanf( file, "%d", &id ) == EOF )
+      break;
 
-     if( fscanf( file, "%d", &action ) == EOF ) {
-	  LPG_destroy( lpg );
-	  Warning( "Not enough values in the policy graph file.");
-	  return( NULL );
-     }
+    if( fscanf( file, "%d", &action ) == EOF ) {
+      LPG_destroy( lpg );
+      Warning( "Not enough values in the policy graph file.");
+      return( NULL );
+    }
 
-	if (( action < 0 ) 
-	    || ( action >= gNumActions ))
-	  {
-	    LPG_destroy( lpg );
-	    Warning( "Bad action number.\n" );
-	    return NULL;
-	  }
-	
-	for( z = 0; z < gNumObservations; z++ ) {
-	 
-	  if ( fscanf( file, "%s", int_str) == EOF )
-	    {
-		 LPG_destroy( lpg );
-		 Warning("Not enough values in the policy graph file." );
-		 return NULL;
-	    }
-	  
-	  if ( strcmp( int_str, INVALID_NODE_STR ) == 0 )
-	    neighbor[z] = INVALID_NODE;
-	  else if ( strcmp( int_str, NO_INFO_NODE_STR ) == 0 )
-	    neighbor[z] = NO_INFO_NODE;
-	  else
-	    neighbor[z] = atoi( int_str );
-	}
+    if (( action < 0 ) || ( action >= gNumActions ))
+    {
+      LPG_destroy( lpg );
+      Warning( "Bad action number.\n" );
+      return NULL;
+    }
 
-	lpg = LPG_addNode( lpg, id, action, neighbor );
-	count++;
-   }  /* while */
-  
+    for( z = 0; z < gNumObservations; z++ ) {
+
+      if ( fscanf( file, "%s", int_str) == EOF )
+      {
+        LPG_destroy( lpg );
+        Warning("Not enough values in the policy graph file." );
+        return NULL;
+      }
+
+      if ( strcmp( int_str, INVALID_NODE_STR ) == 0 )
+        neighbor[z] = INVALID_NODE;
+      else if ( strcmp( int_str, NO_INFO_NODE_STR ) == 0 )
+        neighbor[z] = NO_INFO_NODE;
+      else
+        neighbor[z] = atoi( int_str );
+    }
+
+    lpg = LPG_addNode( lpg, id, action, neighbor );
+    count++;
+  }  /* while */
+
   XFREE( neighbor );
 
   Assert( count > 0, "Node pg nodes read." );
-  
+
   /* DO sanity checking, but only if requested. */
   if ( verify
-	  && ( !LPG_verify( lpg ))) {
+    && ( !LPG_verify( lpg ))) {
      LPG_destroy( lpg );
      Warning( "Policy graph in file is not valid.");
      return( NULL );
@@ -261,7 +260,7 @@ LPG_scanf( FILE *file, int verify ) {
 }  /* LPG_scanf */
 
 /**********************************************************************/
-LinkedPG 
+LinkedPG
 LPG_read( char *filename, int verify ) {
 
   LinkedPG lpg = NULL;
@@ -269,17 +268,17 @@ LPG_read( char *filename, int verify ) {
 
   Assert( filename != NULL, "NULL filename" );
 
-  if (( file = fopen( filename , "r" )) == NULL) 
+  if (( file = fopen( filename , "r" )) == NULL)
     {
-	 Abort( "Cannot open policy graph file for reading." );
+   Abort( "Cannot open policy graph file for reading." );
     }
-  
+
   lpg = LPG_scanf( file, verify );
-  
+
   fclose( file );
 
   return lpg;
-  
+
 }  /* LPG_read */
 
 
@@ -299,7 +298,7 @@ LPG_printf( LinkedPG lpg, FILE *file ) {
 }  /* LPG_printf */
 
 /**********************************************************************/
-void 
+void
 LPG_display( LinkedPG lpg ) {
 
   LPG_printf( lpg, stdout );
@@ -321,12 +320,12 @@ LPG_write( LinkedPG lpg, char *filename ) {
 }  /* LPG_write */
 
 /**********************************************************************/
-int  
+int
 LPG_size( LinkedPG pg ) {
   int count = 0;
 
   while( pg != NULL ) {
-    
+
     count++;
     pg = pg->next;
   }  /* while */
@@ -335,7 +334,7 @@ LPG_size( LinkedPG pg ) {
 }  /* LPG_size */
 
 /**********************************************************************/
-int  
+int
 LPG_getPGNodePosition( LinkedPG pg, int id ) {
 /*
    Returns the node number's position in the linked list with '0'
@@ -365,13 +364,13 @@ LPG_getPGNodePosition( LinkedPG pg, int id ) {
  */
 
 /**********************************************************************/
-PG 
+PG
 PG_Constructor( int num_nodes, int num_states,
-			 int num_actions, int num_obs ) 
+       int num_actions, int num_obs )
 {
   PG pg;
   int n;
-  
+
   Assert( num_nodes > 0 && num_obs > 0, "Bad parameters" );
 
   pg = (PG) XMALLOC( sizeof( *pg ));
@@ -388,9 +387,9 @@ PG_Constructor( int num_nodes, int num_states,
   pg->next = (int **) XMALLOC( num_nodes * sizeof( *(pg->next) ) );
   for ( n = 0; n < num_nodes; n++ )
     {
-	 pg->marked[n] = FALSE;
-	 pg->id[n] = n;
-	 pg->next[n] = (int *) XMALLOC( num_obs * sizeof( int ));
+   pg->marked[n] = FALSE;
+   pg->id[n] = n;
+   pg->next[n] = (int *) XMALLOC( num_obs * sizeof( int ));
     }
 
   return ( pg );
@@ -398,8 +397,8 @@ PG_Constructor( int num_nodes, int num_states,
 }  /* PG_Constructor */
 
 /**********************************************************************/
-PG 
-PG_ConstructorFromAlphaList( AlphaList list ) 
+PG
+PG_ConstructorFromAlphaList( AlphaList list )
 {
   int z;
   int n;
@@ -407,8 +406,8 @@ PG_ConstructorFromAlphaList( AlphaList list )
 
   Assert( list != NULL, "Bad (NULL) parameter(s)." );
 
-  pg = PG_Constructor( sizeAlphaList(list), 
-				   gNumStates, gNumActions, gNumObservations );
+  pg = PG_Constructor( sizeAlphaList(list),
+           gNumStates, gNumActions, gNumObservations );
 
   list = list->head;
   n = 0;
@@ -424,35 +423,35 @@ PG_ConstructorFromAlphaList( AlphaList list )
 
 
         if ( list->obs_source[z] != NULL )
-		pg->next[n][z] = list->obs_source[z]->id;
+          pg->next[n][z] = list->obs_source[z]->id;
 
-	   /* We put a special value for when the observation is
-		 impossible. */ 
+         /* We put a special value for when the observation is
+          impossible. */
         else
-		pg->next[n][z] = INVALID_NODE;
+          pg->next[n][z] = INVALID_NODE;
 
-      }  /* for z */          
+      }  /* for z */
 
     } /* if have a setb of next pg pointers */
 
     else {
 
       for ( z = 0; z < gNumObservations; z++ )
-	   pg->next[n][z] = NO_INFO_NODE;
+        pg->next[n][z] = NO_INFO_NODE;
 
     }
-    
+
     list = list->next;
     n++;
   }  /* while list != NULL */
- 
+
   return pg;
 
 } /* PG_ConstructorFromAlphaList */
 
 /**********************************************************************/
-void 
-PG_Destructor( PG pg ) 
+void
+PG_Destructor( PG pg )
 {
   int n;
 
@@ -467,8 +466,8 @@ PG_Destructor( PG pg )
 
 }  /* PG_Destructor */
 /**********************************************************************/
-PG 
-PG_clone( PG pg ) 
+PG
+PG_clone( PG pg )
 {
   int n, z;
   PG clone;
@@ -478,16 +477,16 @@ PG_clone( PG pg )
   clone = PG_Constructor( pg->num_nodes, pg->num_states,
                           pg->num_actions, pg->num_obs );
 
-  for ( n = 0; n < pg->num_nodes; n++ ) 
+  for ( n = 0; n < pg->num_nodes; n++ )
     {
-	 
-	 clone->marked[n] = pg->marked[n];
-	 clone->id[n] = pg->id[n];
-	 clone->action[n] = pg->action[n];
-	 
-	 for( z = 0; z < pg->num_obs; z++ )
-	   clone->next[n][z] = pg->next[n][z];
-	 
+
+   clone->marked[n] = pg->marked[n];
+   clone->id[n] = pg->id[n];
+   clone->action[n] = pg->action[n];
+
+   for( z = 0; z < pg->num_obs; z++ )
+     clone->next[n][z] = pg->next[n][z];
+
     } /* for n */
 
   return ( clone );
@@ -495,41 +494,43 @@ PG_clone( PG pg )
 }  /* PG_clone */
 
 /**********************************************************************/
-void 
-PG_printf( PG pg, FILE *file  ) 
+void
+PG_printf( PG pg, FILE *file  )
 {
   /*
     Displays the policy graph to the file handle specified.
-    
+
     The policy graph will be output with the format of one line per node
     in the policy graph:
-    
+
     ID  ACTION    OBS1  OBS2 OBS3 ... OBSN
-    
+
     where ID is the id of the alpha vector in the current set, ACTION is
     the action for this vector, and OBS1 through OBSN are the id's of
     the vectors in the previous epoch's alpha vector set (one for each
-    observation). 
+    observation).
   */
   int n, z;
 
   Assert( pg != NULL && file != NULL, "Bad parameters" );
 
-  for ( n = 0; n < pg->num_nodes; n++ ) 
+  for ( n = 0; n < pg->num_nodes; n++ )
+  {
+
+    fprintf( file, "%d %d  ", n, pg->action[n] );
+
+    for( z = 0; z < pg->num_obs; z++ )
     {
-	 
-	 fprintf( file, "%d %d  ", n, pg->action[n] );
-	 
-	 for( z = 0; z < pg->num_obs; z++ )
-	   if ( pg->next[n][z] != INVALID_NODE )
-		fprintf( file, "%d ", pg->next[n][z] );
-	   else if ( pg->next[n][z] == NO_INFO_NODE )
-		fprintf( file, "%s ", INVALID_NODE_STR );
-	   else
-		fprintf( file, "%s ", NO_INFO_NODE_STR );
-	 
-	 fprintf( file, "\n");
-    }  /* for n */
+      if ( pg->next[n][z] != INVALID_NODE )
+        fprintf( file, "%d ", pg->next[n][z] );
+      else if ( pg->next[n][z] == NO_INFO_NODE )
+        fprintf( file, "%s ", INVALID_NODE_STR );
+      else
+        fprintf( file, "%s ", NO_INFO_NODE_STR );
+    }
+
+    fprintf( file, "\n");
+  }  /* for n */
 
 }  /* PG_printf */
 
@@ -542,7 +543,7 @@ PG_scanf( FILE *file, int verify )
   PG pg;
 
   lpg = LPG_scanf( file, verify );
-  
+
   if ( lpg == NULL )
     return NULL;
 
@@ -551,32 +552,32 @@ PG_scanf( FILE *file, int verify )
   LPG_destroy( lpg );
 
   return pg;
-  
+
 } /* PG_scanf */
 
 /**********************************************************************/
-void 
-PG_display( PG pg  ) 
+void
+PG_display( PG pg  )
 {
   PG_printf( pg, stdout );
 } /* PG_display */
 
 /**********************************************************************/
-void 
-PG_write( PG pg, char *filename  ) 
+void
+PG_write( PG pg, char *filename  )
 {
   FILE *file;
 
   Assert( pg != NULL && filename != NULL, "Bad parameters" );
 
-  if (( file = fopen( filename , "w" )) == NULL) 
-    {
-	 Warning( "Cannot open policy graph file for writing." );
-	 return;
-    }
-  
+  if (( file = fopen( filename , "w" )) == NULL)
+  {
+    Warning( "Cannot open policy graph file for writing." );
+    return;
+  }
+
   PG_printf( pg, file );
-  
+
   fclose( file );
 }  /* PG_write */
 
@@ -588,7 +589,7 @@ PG_read( char *filename, int verify )
   PG pg;
 
   lpg = LPG_read( filename, verify );
-  
+
   if ( lpg == NULL )
     return NULL;
 
@@ -604,7 +605,7 @@ PG_read( char *filename, int verify )
 PG PG_convertLPGToPG( LinkedPG old_pg ) {
 /*
   Converts from a policy graph in the linked-list representation into
-  a policy graph in the array-based representation. 
+  a policy graph in the array-based representation.
 */
 
   PG pg;
@@ -614,14 +615,14 @@ PG PG_convertLPGToPG( LinkedPG old_pg ) {
 
   pg = PG_Constructor( LPG_size( old_pg ), gNumStates,
                        gNumActions, gNumObservations );
-  
+
   while( old_pg != NULL ) {
 
     pg->action[old_pg->id] = old_pg->action;
 
     for( z = 0; z < gNumObservations; z++ )
       pg->next[old_pg->id][z] = old_pg->neighbor[z];
-    
+
     old_pg = old_pg->next;
   }  /* while */
 
@@ -640,25 +641,25 @@ void PG_relink( PG pg, int* link_map, int max_idx ) {
 
   Assert( ( pg != NULL ) && ( link_map != NULL ), "Bad parameters" );
 
-  for ( n = 0; n < pg->num_nodes; n++ ) 
+  for ( n = 0; n < pg->num_nodes; n++ )
     {
 
-	 for( z = 0; z < pg->num_obs; z++ )
-	   {
-		/* Handle special case of "X" entries */
-		if ( pg->next[n][z] < 0 )
-		  continue;
+   for( z = 0; z < pg->num_obs; z++ )
+     {
+    /* Handle special case of "X" entries */
+    if ( pg->next[n][z] < 0 )
+      continue;
 
-		if ( pg->next[n][z] > max_idx )
-		  {
-		    Warning( "Link index too large. Policy graph mismatch?" );
-		    pg->next[n][z] = NO_INFO_NODE;
-		    continue;
-		  }
+    if ( pg->next[n][z] > max_idx )
+      {
+        Warning( "Link index too large. Policy graph mismatch?" );
+        pg->next[n][z] = NO_INFO_NODE;
+        continue;
+      }
 
-		pg->next[n][z] = link_map[pg->next[n][z]];
-	   }
-	 
+    pg->next[n][z] = link_map[pg->next[n][z]];
+     }
+
     } /* for n */
 
 } /* PG_relink */
@@ -672,21 +673,21 @@ void PG_relink( PG pg, int* link_map, int max_idx ) {
  */
 
 /**********************************************************************/
-void 
-APG_displayPolicyGraph( FILE *file, AlphaList list ) 
+void
+APG_displayPolicyGraph( FILE *file, AlphaList list )
 {
   /*
     Displays the policy graph to the file handle specified.
-    
+
     The policy graph will be output with the format of one line per node
     in the policy graph:
-    
+
     ID  ACTION    OBS1  OBS2 OBS3 ... OBSN
-    
+
     where ID is the id of the alpha vector in the current set, ACTION is
     the action for this vector, and OBS1 through OBSN are the id's of
     the vectors in the previous epoch's alpha vector set (one for each
-    observation). 
+    observation).
   */
   PG pg;
 
@@ -699,12 +700,12 @@ APG_displayPolicyGraph( FILE *file, AlphaList list )
 }  /* displayPolicyGraph */
 
 /**********************************************************************/
-void 
-APG_writePolicyGraph( AlphaList list, char *filename ) 
+void
+APG_writePolicyGraph( AlphaList list, char *filename )
 {
   /*
     Displays the policy graph of a set of vectors to the filename
-    specified. 
+    specified.
   */
   PG pg;
 
@@ -717,8 +718,8 @@ APG_writePolicyGraph( AlphaList list, char *filename )
 }  /* writePolicyGraph */
 
 /**********************************************************************/
-void 
-APG_showPolicyGraph( AlphaList list ) 
+void
+APG_showPolicyGraph( AlphaList list )
 {
   /*
     Displays the policy graph for an alpha vector set to stdout.

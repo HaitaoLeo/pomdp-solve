@@ -25,14 +25,14 @@
  *    1998-2003, Anthony R. Cassandra
  *
  *    All Rights Reserved
- *                          
+ *
  *    Permission to use, copy, modify, and distribute this software and its
  *    documentation for any purpose other than its incorporation into a
  *    commercial product is hereby granted without fee, provided that the
  *    above copyright notice appear in all copies and that both that
  *    copyright notice and this permission notice appear in supporting
  *    documentation.
- * 
+ *
  *    ANTHONY CASSANDRA DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  *    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR ANY
  *    PARTICULAR PURPOSE.  IN NO EVENT SHALL ANTHONY CASSANDRA BE LIABLE FOR
@@ -51,9 +51,9 @@
  *   horizon partially observable Markov decision problems using value
  *   iteration with dynamic programming.  It will call the appropriate
  *   algorithm to solve for each epoch.
- *   
+ *
  *   The command line arguments are shown by running:
- * 
+ *
  *         pomdp-solve -h
  */
 
@@ -93,11 +93,11 @@
 /**********************************************************************/
 
 /**********************************************************************/
-void 
-initPomdpSolve( PomdpSolveParams param ) 
+void
+initPomdpSolve( PomdpSolveParams param )
 {
   char msg[MAX_MSG_LENGTH];
-  
+
   /* We need to do this first, since there are other things to come
      which need to know the POMDP parameters (or at least the sizes
      of the states, action, observation, etc. Will also do the
@@ -106,7 +106,7 @@ initPomdpSolve( PomdpSolveParams param )
   fprintf( param->report_file, "[Initializing POMDP ... " );
   fflush( param->report_file );
 
-  initializePomdp( param->param_filename, 
+  initializePomdp( param->param_filename,
                    param->impossible_obs_epsilon );
 
   fprintf( param->report_file, "done.]\n" );
@@ -116,7 +116,7 @@ initPomdpSolve( PomdpSolveParams param )
       check for the over-ridden value *AFTER* we parse the POMDP
       file, which is done in the initializePOMDP() routine. If
       we do override it, just set its value to the new value. */
-   if ( param->override_discount >= 0.0 ) 
+   if ( param->override_discount >= 0.0 )
      gDiscount = param->override_discount;
 
    /* We will save the solution after each iteration in a temporary
@@ -139,12 +139,12 @@ initPomdpSolve( PomdpSolveParams param )
    strcat(  param->pg_filename, PG_FILE_SUFFIX );
 
    if ( param->initial_policy_filename[0] != NULL_CHAR ) {
-     if (( param->initial_policy 
-           = readAlphaList( param->initial_policy_filename, 
+     if (( param->initial_policy
+           = readAlphaList( param->initial_policy_filename,
                             -1 )) == NULL) {
-       
+
        sprintf
-         ( msg, 
+         ( msg,
            "Cannot open initial policy file name: %s.\n\t(Using default)",
            param->initial_policy_filename );
        Warning( msg );
@@ -175,20 +175,20 @@ initPomdpSolve( PomdpSolveParams param )
      break;
 
    case POMDP_SOLVE_OPTS_Method_grid:
-	initFiniteGrid( param );
-	break;
+  initFiniteGrid( param );
+  break;
 
    case POMDP_SOLVE_OPTS_Method_mcgs:
-	MCGS_initialize( param );
-	break;
+  MCGS_initialize( param );
+  break;
 
    default:
      break;
    }  /* switch gMethod */
-   
+
    /* Some of the routines in common.c need a hunk of memory to
       compute things, thus we allocate this memory once up front to
-      save the malloc/free calls. */ 
+      save the malloc/free calls. */
    initCommon();
 
    /* Set up any globally used things just before solving. Must do
@@ -202,7 +202,7 @@ initPomdpSolve( PomdpSolveParams param )
    /* If an upper limit on time was specified on the command line,
       then set up a timer to signal us when time is up. */
    setUpIntervalTimer( param->max_secs );
-   
+
    /* Set the virtual memory limit here.  This will help to stop
       run-away processes.  */
    setMemoryLimit( param->memory_limit );
@@ -216,8 +216,8 @@ initPomdpSolve( PomdpSolveParams param )
 
 }  /* initPomdpSolve */
 /**********************************************************************/
-void 
-cleanUpPomdpSolve( PomdpSolveParams param ) 
+void
+cleanUpPomdpSolve( PomdpSolveParams param )
 {
 
   switch ( param->opts->method ) {
@@ -227,23 +227,23 @@ cleanUpPomdpSolve( PomdpSolveParams param )
   case POMDP_SOLVE_OPTS_Method_witness:
     cleanUpWitness();
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_twopass:
     cleanUpTwoPass( );
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_linsup:
     cleanUpLinSupport( );
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_incprune:
     cleanUpIncPrune( );
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_grid:
     cleanUpFiniteGrid( );
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_mcgs:
     MCGS_cleanup();
     break;
@@ -257,34 +257,34 @@ cleanUpPomdpSolve( PomdpSolveParams param )
 
   /* Undo whatever initCommon() does. */
   cleanUpCommon();
-  
+
   /* Undo whatever initGlobal() does. */
   cleanUpGlobal();
-  
+
   /* Deallocate the POMDP problem parameters. */
   cleanUpPomdp();
 
   /* Close the reporting file. */
   fclose( param->report_file );
-  
-  /* Don't need this structure anymore. */ 
+
+  /* Don't need this structure anymore. */
   destroyPomdpSolveParams ( param );
-  
+
 }  /* cleanUpPomdpSolve */
 /**********************************************************************/
-void 
+void
 endPomdpSolve( PomdpSolveParams param,
-	       AlphaList solution ) 
+         AlphaList solution )
 {
-  /* 
+  /*
      The gSuccinct variable is used when we want a very concise reporting
      of the results of the program.  This is useful for running series
      of experiments and combining the results. Thus, we only output
-     out final report if we are not being brief. 
+     out final report if we are not being brief.
   */
   AlphaList scaled_list;
 
-  Assert( param != NULL && solution != NULL, 
+  Assert( param != NULL && solution != NULL,
           "Bad (NULL) parameters." );
 
   /* Write the solution files, but note that this must be done before
@@ -303,14 +303,14 @@ endPomdpSolve( PomdpSolveParams param,
     saveAlphaList( solution, param->alpha_filename );
 
   APG_writePolicyGraph( solution, param->pg_filename );
-  
+
   if ( gVerbose[V_POMDP_SOLVE] ) {
-    fprintf( param->report_file, 
+    fprintf( param->report_file,
              "The solution to the (in)finite horizon is:\n" );
     displayAlphaList( param->report_file, solution );
   }
   else {
-    fprintf(param->report_file, 
+    fprintf(param->report_file,
             "++++++++++++++++++++++++++++++++++++++++\n");
     fprintf(param->report_file,
             "Solution found.  See file:\n\t%s\n\t%s\n",
@@ -318,14 +318,14 @@ endPomdpSolve( PomdpSolveParams param,
     fprintf(param->report_file,
             "++++++++++++++++++++++++++++++++++++++++\n");
   }
-    
+
   /* Show all program stats depending upon execution parameters.. */
   reportStats( param->stat );
- 
+
 }  /* endPomdpSolve */
 /**********************************************************************/
-AlphaList 
-getDefaultInitialPolicy( ) 
+AlphaList
+getDefaultInitialPolicy( )
 {
   /*
     For now our default policy is just all zeroes.
@@ -333,9 +333,9 @@ getDefaultInitialPolicy( )
   AlphaList alpha_list;
   double *alpha;
   int i;
-  
+
   alpha_list = newAlphaList();
-  
+
   alpha = newAlpha();
   for ( i = 0; i < gNumStates; i++ )
     alpha[i] = 0.0;
@@ -345,15 +345,15 @@ getDefaultInitialPolicy( )
   return ( alpha_list );
 }  /* getInitialSolution */
 /**********************************************************************/
-void 
-handleSaveAll( AlphaList list, PomdpSolveParams param ) 
+void
+handleSaveAll( AlphaList list, PomdpSolveParams param )
 {
   /*
     Handles the case if we want to save the solution for every epoch.
     Note that this saves the results of the DP update, so if the ZLZ
     speedup is being used, you will not get any of those itermediate
     results saved.
-    
+
     This routine should first be called with a NULL parameter to serve
     as the initialization of the filenames that will be used.  We use
     static variables to maintain the filenames.
@@ -367,14 +367,14 @@ handleSaveAll( AlphaList list, PomdpSolveParams param )
   /* A NULL list means we should initialize the names we will be using
      for saving each epoch's solution. */
   if ( list == NULL ) {
-    
+
     /* See if the immediate rewards were scaled and if so, make sure
        we adjust the values in the value funciton to reflect this. */
-    
+
     strcpy( alpha_filename, param->alpha_filename );
-    
+
     strcpy( pg_filename, param->pg_filename );
-    
+
     /* This is a memory address calculation to provide a pointer into
        the strings where the NULL terminator exists.  We will be
        appending unique ids for each epoch and want to just
@@ -392,7 +392,7 @@ handleSaveAll( AlphaList list, PomdpSolveParams param )
   sprintf( num_str, "%d", param->cur_epoch );
   strcat( alpha_filename, num_str );
   strcat( pg_filename, num_str );
-  
+
   if ( valuesRequireScaling() ) {
     scaled_list = makeScaledAlphaList( list, param->update_count );
     saveAlphaList( scaled_list, alpha_filename );
@@ -409,7 +409,7 @@ handleSaveAll( AlphaList list, PomdpSolveParams param )
      when this option is in effect. */
   if ( param->vi_variation != ZlzSpeedup )
     APG_writePolicyGraph( list, pg_filename );
-  
+
   /* Truncate the filenames to make them their original
      name. This just restores the null-terminator to the
      original position. */
@@ -424,10 +424,10 @@ handleSaveAll( AlphaList list, PomdpSolveParams param )
 /**********************************************************************/
 
 /**********************************************************************/
-double 
+double
 weakBound( AlphaList cur_alpha_list,
-		 AlphaList prev_alpha_list,
-		 double delta ) 
+     AlphaList prev_alpha_list,
+     double delta )
 {
 /*
   Computes the weak bound error difference between two (the current
@@ -440,7 +440,7 @@ weakBound( AlphaList cur_alpha_list,
   the belief simplex corners, which puts a maximal bound on the
   "intererior" difference. Given two hyperplaces over a region, the
   maximal difference between them must occur at the boundaries of the
-  region.  
+  region.
 */
    double max_p_x, min_p_y, max_s, val;
    AlphaList p_x, p_y;
@@ -457,7 +457,7 @@ weakBound( AlphaList cur_alpha_list,
       p_y = prev_alpha_list->head;
       while( p_y != NULL ) {
 
-	   max_s = -1.0*HUGE_VAL; /* max component-wise difference */
+     max_s = -1.0*HUGE_VAL; /* max component-wise difference */
          for ( s = 0; s < gNumStates; s++ ) {
 
             /* added fabs() 8/17/95 */
@@ -466,16 +466,16 @@ weakBound( AlphaList cur_alpha_list,
             if ( val > max_s )
                max_s = val;
          }
-            
+
          if ( max_s < min_p_y )
             min_p_y = max_s;
 
          p_y = p_y->next;
       }  /* while p_y */
 
-      if ( min_p_y > max_p_x ) 
+      if ( min_p_y > max_p_x )
          max_p_x = min_p_y;
-      
+
       /* This is an optimization to exit the loop early */
       if ( max_p_x > delta )
          return HUGE_VAL;
@@ -486,17 +486,17 @@ weakBound( AlphaList cur_alpha_list,
    return ( max_p_x );
 }  /* weakBound */
 /**********************************************************************/
-int 
-meetStopCriteria( AlphaList prev_alpha_list, 
-			   AlphaList cur_alpha_list,
-			   double *error,
-			   PomdpSolveParams param ) 
+int
+meetStopCriteria( AlphaList prev_alpha_list,
+         AlphaList cur_alpha_list,
+         double *error,
+         PomdpSolveParams param )
 {
-  /* 
+  /*
      Determines whether or not we can stop value iteration.  There are
      different stopping criteria and we want to see if the one selected
      is met.  This is done by comparing the current and previous value
-     function (set of alpha vectors).  
+     function (set of alpha vectors).
   */
 
   Assert( prev_alpha_list != NULL && cur_alpha_list != NULL,
@@ -505,61 +505,61 @@ meetStopCriteria( AlphaList prev_alpha_list,
   startContext( param->stat, Context_Stop_Criteria );
 
   /* The finite grid method (being a non-exact method usually), will
-	use its own stopping criteria. */
+  use its own stopping criteria. */
   if ( param->opts->method  == POMDP_SOLVE_OPTS_Method_grid )
     {
-	 *error = FG_computeError( prev_alpha_list, cur_alpha_list, param );
+   *error = FG_computeError( prev_alpha_list, cur_alpha_list, param );
     }
 
   /* Else select from exact stopping criteria setting. */
   else
     {
-	 switch( param->opts->stop_criteria ) {
-	 case POMDP_SOLVE_OPTS_Stop_Criteria_exact:
-	   
-	   /* The exact stopping criteria is sensitive to the ordering of the
-		 vectors.  Thus, we will sort the current solution before doing
-  		 this comparison.  We will assume that the previous  soltuion is
-		 already sorted as a result of the previous call to this routine
-		 when it would have been the "current" solution. */
-	   sortAlphaList( cur_alpha_list );
-	   
-	   if ( sameAlphaList( prev_alpha_list, 
-					   cur_alpha_list,
-					   param->alpha_epsilon )) {
-		*error = 0.0;
-		endContext( param->stat, Context_Stop_Criteria );
-		return ( TRUE );
-	   } /* if they are identical alpha lists */
-	   
-	   /* Otherwise they are different and we will assume the error is
-		 infinite, since we do not do anything to compute a more precise
-		 characterization of the error */
-	   *error = HUGE_VAL;
-	   endContext( param->stat, Context_Stop_Criteria );
-	   return ( FALSE );
-	   
-	 case POMDP_SOLVE_OPTS_Stop_Criteria_weak:
-	   *error = weakBound( cur_alpha_list, prev_alpha_list,
-					   param->stop_delta );
-	   break;
-	   
-	 case POMDP_SOLVE_OPTS_Stop_Criteria_bellman:
-	   *error = bellmanError( prev_alpha_list,
-						 cur_alpha_list,
-						 param ); 
-	   break;
-	   
-	 default:
-	   Abort( "Unrecognized stopping criteria.\n" );
-	   
-	 }  /* switch */
-	 
+   switch( param->opts->stop_criteria ) {
+   case POMDP_SOLVE_OPTS_Stop_Criteria_exact:
+
+     /* The exact stopping criteria is sensitive to the ordering of the
+     vectors.  Thus, we will sort the current solution before doing
+       this comparison.  We will assume that the previous  soltuion is
+     already sorted as a result of the previous call to this routine
+     when it would have been the "current" solution. */
+     sortAlphaList( cur_alpha_list );
+
+     if ( sameAlphaList( prev_alpha_list,
+             cur_alpha_list,
+             param->alpha_epsilon )) {
+    *error = 0.0;
+    endContext( param->stat, Context_Stop_Criteria );
+    return ( TRUE );
+     } /* if they are identical alpha lists */
+
+     /* Otherwise they are different and we will assume the error is
+     infinite, since we do not do anything to compute a more precise
+     characterization of the error */
+     *error = HUGE_VAL;
+     endContext( param->stat, Context_Stop_Criteria );
+     return ( FALSE );
+
+   case POMDP_SOLVE_OPTS_Stop_Criteria_weak:
+     *error = weakBound( cur_alpha_list, prev_alpha_list,
+             param->stop_delta );
+     break;
+
+   case POMDP_SOLVE_OPTS_Stop_Criteria_bellman:
+     *error = bellmanError( prev_alpha_list,
+             cur_alpha_list,
+             param );
+     break;
+
+   default:
+     Abort( "Unrecognized stopping criteria.\n" );
+
+   }  /* switch */
+
     } /* else using exact criteria from param setting */
 
   endContext( param->stat, Context_Stop_Criteria );
 
-  if ( *error 
+  if ( *error
        <= param->stop_delta * ( 1.0 - gDiscount ) / ( 2.0 * gDiscount ) )
     return TRUE;
   else
@@ -567,27 +567,27 @@ meetStopCriteria( AlphaList prev_alpha_list,
 
 }  /* meetStopCriteria */
 /**********************************************************************/
-double 
-getSolvePrecision( PomdpSolveParams param ) 
+double
+getSolvePrecision( PomdpSolveParams param )
 {
   /*
     This routine will get the precision factor to use during solving of
     the POMDP.  Exactly what it does depends on the variation of value
     iteration.  For normal operation, we use the param->epsilon value
     directly.  For the epsilon pruning of the q-functions version, we
-    use the pruning epsilon.  
+    use the pruning epsilon.
   */
 
-  if ( param->q_purge_option == purge_epsilon_prune ) 
+  if ( param->q_purge_option == purge_epsilon_prune )
     return (  param->prune_epsilon );
-  
+
   else
     return ( param->epsilon );
 
 }  /* getSolvePrecision */
 /**********************************************************************/
-void 
-setSolvePrecision( double epsilon, PomdpSolveParams param ) 
+void
+setSolvePrecision( double epsilon, PomdpSolveParams param )
 {
   /*
     This routine will set the precision factor to use during solving of
@@ -595,14 +595,14 @@ setSolvePrecision( double epsilon, PomdpSolveParams param )
     iteration.  For normal operation, changing the precision
     actually involves changing a lot of parameters. For the epsilon
     pruning of the q-functions version, we only need to change the
-    pruning epsilon. 
+    pruning epsilon.
   */
 
   if ( param->q_purge_option == purge_epsilon_prune )
     param->prune_epsilon = epsilon;
 
   else {
-    
+
     param->epsilon = epsilon;
 
     param->lp_epsilon = Min( param->lp_epsilon, param->epsilon );
@@ -612,20 +612,20 @@ setSolvePrecision( double epsilon, PomdpSolveParams param )
     /* param->alpha_epsilon = param->epsilon; */
     param->vertex_epsilon = param->epsilon;
     param->double_equality_precision = param->epsilon;
-    
-    param->impossible_obs_epsilon = Min( param->epsilon, 
+
+    param->impossible_obs_epsilon = Min( param->epsilon,
                                          DEFAULT_IMPOSSIBLE_OBS_EPSILON );
-    
+
     /* Note that we do not adjust the weka bound stoping criteria
        because we do not want to have value iteration end prematurely
        due to a coarse epsilon */
 
   } /* else using non epsilon prune of Q functions */
-  
+
 }  /* setSolvePrecision */
 /**********************************************************************/
-void 
-doAdjustableEpsilonVariation( PomdpSolveParams param ) 
+void
+doAdjustableEpsilonVariation( PomdpSolveParams param )
 {
   /*
     zzz Add description here when it solidifies.
@@ -670,7 +670,7 @@ doAdjustableEpsilonVariation( PomdpSolveParams param )
      epsilon downwards or not. */
   max_vects = 0;
   min_vects = 99999999;
-  for ( epoch = (param->cur_epoch 
+  for ( epoch = (param->cur_epoch
                  - param->epoch_history_window_length
                  + 1);
         epoch <= param->cur_epoch;
@@ -688,7 +688,7 @@ doAdjustableEpsilonVariation( PomdpSolveParams param )
     /* Maintain the maximum and minium vectors for each epoch */
     min_vects = Min( min_vects, epoch_stats->solution_size );
     max_vects = Max( max_vects, epoch_stats->solution_size );
-    
+
   } /* for epoch */
 
   /* If the max and the min differ by more than the desired amount,
@@ -707,11 +707,11 @@ doAdjustableEpsilonVariation( PomdpSolveParams param )
 
   fprintf( param->report_file,
            ">>Adjusted epsilon to %.3e<<\n", cur_epsilon );
-  
+
 }  /* doAdjustableEpsilonVariation */
 /**********************************************************************/
-void 
-doFixedSolnSizeVariation( PomdpSolveParams param ) 
+void
+doFixedSolnSizeVariation( PomdpSolveParams param )
 {
   /*
     zzz Add description here when it solidifies.
@@ -744,13 +744,13 @@ doFixedSolnSizeVariation( PomdpSolveParams param )
 
 }  /* doFixedSolnSizeVariation */
 /**********************************************************************/
-void 
-startViEpoch( PomdpSolveParams param ) 
+void
+startViEpoch( PomdpSolveParams param )
 {
-  /* 
+  /*
      This is called at the beginning of each epoch of value iteration so
      that value iteration variations can adjust anything that needs it
-     prior to the next iteration. 
+     prior to the next iteration.
   */
 
   /* One thing we always will adjust is the epoch number. */
@@ -765,34 +765,34 @@ startViEpoch( PomdpSolveParams param )
   case FixedSolnSizeVi:
     /* If this is not the first epoch, then we do not need to do
        anything else. */
-    if ( param->cur_epoch != 1 ) 
+    if ( param->cur_epoch != 1 )
       return;
-    
+
     /* If this is the first epoch, then we need to set the starting
        epsilon. If we are using the epsilon pruning for the Q sets,
        then we will adjust the epsilon prune parameter.  Otherwise, we
        will adjust the main program epsilon parameter directly. */
     setSolvePrecision( param->starting_epsilon, param );
-      
+
     fprintf( param->report_file,
-             ">>Starting epsilon set to %.3e<<\n", 
+             ">>Starting epsilon set to %.3e<<\n",
              param->starting_epsilon );
 
     return;
-    
+
   default:
     break;
   } /* switch */
 
 }  /* startViEpoch */
 /**********************************************************************/
-void 
-endViEpoch( PomdpSolveParams param ) 
+void
+endViEpoch( PomdpSolveParams param )
 {
   /*
     This is called at the end of each epoch of value iteration so that
     value iteration variations can adjust anything that needs it prior
-    to the next iteration. 
+    to the next iteration.
   */
 
   switch ( param->vi_variation ) {
@@ -807,11 +807,11 @@ endViEpoch( PomdpSolveParams param )
   case FixedSolnSizeVi:
     doFixedSolnSizeVariation( param );
     return;
-    
+
   default:
     break;
   } /* switch */
-  
+
 }  /* endViEpoch */
 /**********************************************************************/
 
@@ -820,16 +820,16 @@ endViEpoch( PomdpSolveParams param )
 /**********************************************************************/
 
 /**********************************************************************/
-AlphaList 
+AlphaList
 improveByQ( AlphaList **projection,
-	    PomdpSolveParams param ) 
+      PomdpSolveParams param )
 {
-  /* 
+  /*
      Some algorithms will solve one iteration of POMDP value iteration
      by breaking the problem into a separate one for each action.
      This routine will implement the basic structure needed and call the
      appropriate routines depending on the specific algorithm being used.
-     
+
      Current algorithms that do it this way:
        TwoPass
        Witness
@@ -840,66 +840,66 @@ improveByQ( AlphaList **projection,
   int start_lps, start_constraints, end_lps, end_constraints;
 
   /* Nothing to do if no projections. */
-  Assert ( projection != NULL && param != NULL, 
+  Assert ( projection != NULL && param != NULL,
            "Bad (NULL) parameters." );
-  
+
   new_list = newAlphaList();
-  
+
   for( a = 0; a < gNumActions; a++ ) {
-    
-    if ( gVerbose[V_POMDP_SOLVE] == TRUE ) 
+
+    if ( gVerbose[V_POMDP_SOLVE] == TRUE )
       getLpStats( param->stat, &start_lps, &start_constraints );
-    
+
     startContext( param->stat, Context_Q_a_build );
-    
+
     switch ( param->opts->method ) {
     case POMDP_SOLVE_OPTS_Method_twopass:
       cur_list = improveTwoPass( projection[a], param );
       break;
-      
+
     case POMDP_SOLVE_OPTS_Method_witness:
       cur_list = improveWitness( projection[a], param );
       break;
-      
+
     case POMDP_SOLVE_OPTS_Method_incprune:
       cur_list = improveIncPrune( projection[a], param );
       break;
-      
+
     default:
       Abort( "Unreckognized solution method for improveByQ()." );
-      
+
     }  /* switch gMethod */
-    
+
     endContext( param->stat, Context_Q_a_build );
-    
+
     if ( gVerbose[V_POMDP_SOLVE] == TRUE ) {
-      
+
       getLpStats( param->stat, &end_lps, &end_constraints );
-      fprintf( param->report_file, 
+      fprintf( param->report_file,
                "Construct Q end: Q^%d size: %d  M: %d  Z: %d\n",
                a, sizeAlphaList( cur_list ),
-               maxSizeAlphaLists( projection[a], gNumObservations ), 
+               maxSizeAlphaLists( projection[a], gNumObservations ),
                gNumObservations );
-      fprintf( param->report_file, 
+      fprintf( param->report_file,
                "\tLPs: %d\tConstraints: %d\n",
                end_lps - start_lps, end_constraints - start_constraints );
-      
+
     } /* if verbose */
-    
+
     /* Must do this *after* referencing cur_list since this is a
        destructive union that will obliterate cur_list. */
     unionTwoAlphaLists( new_list, cur_list );
-    
+
   }  /* for a */
-  
+
   startContext( param->stat, Context_Q_a_merge );
-  purgeAlphaList( new_list, 
-                  param->q_purge_option, 
+  purgeAlphaList( new_list,
+                  param->q_purge_option,
                   param );
 
   /* If we used epsilon pruning, then record the computed difference
      which was temporarily stored in the 'param' structure. */
-  if (( param->stat != NULL ) 
+  if (( param->stat != NULL )
       && ( param->q_purge_option == purge_epsilon_prune ))
     recordEpochMaxEpsilon( param->stat->cur_epoch,
                            param->epsilon_diff_of_last_prune,
@@ -911,14 +911,14 @@ improveByQ( AlphaList **projection,
 
 }  /* improveByQ */
 /**********************************************************************/
-AlphaList 
+AlphaList
 improveV( AlphaList prev_alpha_list,
-		PomdpSolveParams param ) 
+    PomdpSolveParams param )
 {
   /*
     This does a single DP step of value iteration for a POMDP.  It takes
     in the previous value function and parameters for solving and
-    returns the next or improved solution.  
+    returns the next or improved solution.
   */
   AlphaList next_alpha_list;
   AlphaList **projection;
@@ -932,21 +932,21 @@ improveV( AlphaList prev_alpha_list,
   startContext( param->stat, Context_Projection_build );
   projection = makeAllProjections( prev_alpha_list );
   endContext( param->stat, Context_Projection_build );
-  
+
   startContext( param->stat, Context_Projection_purge );
   purgeProjections( projection, param );
   endContext( param->stat, Context_Projection_purge );
-  
+
   switch( param->opts->method ) {
-    
+
   case POMDP_SOLVE_OPTS_Method_enum:
     next_alpha_list = improveEnumeration( projection, param );
     break;
-    
+
   case POMDP_SOLVE_OPTS_Method_linsup:
     next_alpha_list = improveLinSupport( projection, param );
     break;
-    
+
     /* The witness, incremental pruning and two-pass algorithms
        construct the next alpha list one action at a time.  As a
        result, they share a lot of common structure.  Therefore,
@@ -965,10 +965,10 @@ improveV( AlphaList prev_alpha_list,
   case POMDP_SOLVE_OPTS_Method_mcgs:
     next_alpha_list = MCGS_improve( projection, param );
     break;
-      
+
   default:
     Abort( "Unrecognized solution method.");
-    
+
   } /* switch gMethod */
 
   /* While building the next alpha list, the 'obs_source' points
@@ -976,19 +976,19 @@ improveV( AlphaList prev_alpha_list,
      directly into prev_alpha_list for purposes of the policy
      graph stuff. */
   relinkObsSources( next_alpha_list );
-  
+
   /* Having redirected the obs_source pointer in next_alpha_list
      from projection to prev_alpha_list, we can now free up the
      memory for the projections, since we no longer need them and
      we don't have to worry about leaving pointers to nowhere. */
   freeAllProjections( projection );
-  
+
   return ( next_alpha_list );
 
 }  /* improveV */
 /**********************************************************************/
-void 
-solvePomdp( PomdpSolveParams param ) 
+void
+solvePomdp( PomdpSolveParams param )
 {
   /*
     If horizon < 0 then it will run until it converges or until
@@ -1016,17 +1016,17 @@ solvePomdp( PomdpSolveParams param )
     next_alpha_list = getDefaultInitialPolicy( );
   else
     next_alpha_list = duplicateAlphaList( param->initial_policy );
-  
+
   /* Just report the initial policy used. */
   if ( gVerbose[V_POMDP_SOLVE] == TRUE ) {
     fprintf( param->report_file, "The initial policy being used:\n");
     displayAlphaList( param->report_file, next_alpha_list );
   }
   else
-    fprintf( param->report_file, 
-             "[Initial policy has %d vectors.]\n", 
+    fprintf( param->report_file,
+             "[Initial policy has %d vectors.]\n",
              sizeAlphaList( next_alpha_list ));
-   
+
   /* Make a structure to hold a place to accumulate the solution
      statistics and initialize the global solution time and counters.
      Note this needs to be done just before starting the solution
@@ -1035,7 +1035,7 @@ solvePomdp( PomdpSolveParams param )
      iterations to end with this set to the last epoch computed.
      Thus, we increment this at the start of the loop, and need this
      to start at 0 to get '1' for the first epoch. */
-  param->stat = newSolutionStats( param->report_file, 
+  param->stat = newSolutionStats( param->report_file,
                                   param->stat_summary );
 
   /* Set the epoch number to zero.  It gets incremented at start of
@@ -1050,12 +1050,12 @@ solvePomdp( PomdpSolveParams param )
         && ( done == FALSE )) {
 
     /* Here we see if we want to save the previous solution to a
-	  file. Skip doing this on the first epoch though. */
+    file. Skip doing this on the first epoch though. */
     if (( param->cur_epoch > 0 )
-	   && ( param->opts->save_penultimate == Boolean_true ))
-	 {
-	   saveAlphaList( next_alpha_list, param->penultimate_filename ); 
-	 }
+     && ( param->opts->save_penultimate == Boolean_true ))
+    {
+      saveAlphaList( next_alpha_list, param->penultimate_filename );
+    }
 
     /* Some variations of value iteration need to adjust things at the
        startb of an iteration. This routine handles these things.
@@ -1068,7 +1068,7 @@ solvePomdp( PomdpSolveParams param )
        do anything, since there will be no obs_source array for the
        initial alpha_list. */
     clearObsSourceAlphaList( next_alpha_list );
-    
+
     /* Get rid of old value function, but make sure this is done
        after the policy graph information is extracted from
        next_alpha_list, since there are pointers from
@@ -1085,41 +1085,41 @@ solvePomdp( PomdpSolveParams param )
     /* Start the clock ticking on this epoch time and show some
        information indicating the epoch as started. */
     epochStartStats( param->stat );
-    
+
     /* This is the heart of solution process: computing one value
        function from the other. */
     next_alpha_list = improveV( prev_alpha_list, param );
 
     /* In case the -save_all option was selected, save the files. We
        need to do this *before* we do the ZLZ update, otherwise the
-       policy graph and value functions might not make much sense. 
+       policy graph and value functions might not make much sense.
 
-	  Note that with the -save_all option, we incur the sorting and
-	  file I/O time inside the timing of each epoch.  Thus, one
-	  should not use this if the timing will matter.  A future change
-	  might fix this so this time does not get included. 
+    Note that with the -save_all option, we incur the sorting and
+    file I/O time inside the timing of each epoch.  Thus, one
+    should not use this if the timing will matter.  A future change
+    might fix this so this time does not get included.
     */
     if ( param->save_all == TRUE ) {
-	 sortAlphaList( next_alpha_list );
-	 handleSaveAll( next_alpha_list, param );
+      sortAlphaList( next_alpha_list );
+      handleSaveAll( next_alpha_list, param );
     }
 
     /* The number of value function updates is not always the same as
        the number of value funtion epochs, mostly due to the ZLZ
        speedup. */
     (param->update_count)++;
-    
+
     /* We will first check the stopping criteria, which will also
        compute the current error for the weak and bellman stopping
        criteria. In case we are using the ZLZ speedup, we use this
        error both to decide whether to do the speedup and for deciding
        when the terminate an inner ZLZ loop. */
-    if ( meetStopCriteria( prev_alpha_list, 
+    if ( meetStopCriteria( prev_alpha_list,
                            next_alpha_list,
                            &cur_error,
                            param ) == TRUE )
       done = TRUE;
-    
+
     /* This is a speedup by Zhang, Lee and Zhang for a UAI-99
        submission. It uses the witness points uncovered by the full DP
        update to do more updates of the value function. Note that we
@@ -1130,7 +1130,7 @@ solvePomdp( PomdpSolveParams param )
 
     /* Stop the clock for this epoch and show some end of epoch
        information */
-    epochEndStats( param->stat, 
+    epochEndStats( param->stat,
                    sizeAlphaList( next_alpha_list ),
                    cur_error );
 
@@ -1142,19 +1142,19 @@ solvePomdp( PomdpSolveParams param )
        as things are added.  This may or may not means the vectors
        will be numbered nicely.  This will just make sure there is a
        nice numbering and will leave the vector lexicographically
-       sorted. 
+       sorted.
 
-	  Note that there are a number of places we sort the vectors.
-	  This is somewhat redundant, but since an slready sorted list
-	  requires little effort, this is not as bug a computational hit
-	  as it might first appear to be. */
+    Note that there are a number of places we sort the vectors.
+    This is somewhat redundant, but since an slready sorted list
+    requires little effort, this is not as bug a computational hit
+    as it might first appear to be. */
     sortAlphaList( next_alpha_list );
 
     /* We will always save the current alpha list to a file so that
        abnormal termination will leave the lastest epoch's
        solution.  This will allow you to start it with the last
        solution and not have to re-run it. */
-    saveAlphaList( next_alpha_list, param->backup_file ); 
+    saveAlphaList( next_alpha_list, param->backup_file );
 
     /* If we are using a variation on value iteration, then we may
        need to adjust some parameters (epsilon) after an epoch.
@@ -1164,15 +1164,15 @@ solvePomdp( PomdpSolveParams param )
       endViEpoch( param );
 
   }  /* while( done == FALSE && gInterrupt = FALSE ) */
-  
+
   gInterrupt = FALSE;
-  
+
   /* Give some final tally information, such as solution location and
      time. Also write the solution files, but note that this must be
      done before we clear the prev_alpha_list to ensure policy graph
      information is preserved. */
   endPomdpSolve( param, next_alpha_list );
-  
+
   /* Get rid of previous and next value functions.  Note that at this
      point there are obs_source pointers from next_alpha_list into
      prev_alpha_list, so free'ing prev_alpha_list first would leave
